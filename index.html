@@ -54,6 +54,7 @@
                         console.log('Notifications have been started.');
                     })
                     .catch(error => {
+                        statusText.textContent = error;
                         console.error("Error123");
                         console.error(error);
                     });
