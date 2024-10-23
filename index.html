@@ -1,0 +1,169 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BLE Device Onboarding</title>
+</head>
+
+<body>
+    <h1>BLE Device Onboarding</h1>
+    <button id="onboardDeviceButton">Onboard Device</button>
+    <p id="status">Status: Not connected</p>
+
+    <script>
+        const onboardDeviceButton = document.getElementById('onboardDeviceButton');
+        const statusText = document.getElementById('status');
+
+
+        onboardDeviceButton.addEventListener('click', async () => {
+            try {
+
+
+
+                navigator.bluetooth.requestDevice({ filters: [{ services: ['000018aa-0000-1000-8000-00805f9b34fb'] }] })
+                    .then(device => {
+                        console.log("connecting...");
+                        return device.gatt.connect();
+                    }
+                    )
+                    .then(server => {
+                        console.log("getPrimaryService...");
+                        return server.getPrimaryService('000018aa-0000-1000-8000-00805f9b34fb')
+                    })
+                    .then(service => {
+                        console.log("getCharacteristic...");
+                        return service.getCharacteristic('00002aaa-0000-1000-8000-00805f9b34fb')
+                    })
+                    .then(async characteristic => {
+                        try {
+                            await characteristic.startNotifications();
+                            console.log('Characteristic updates started successfully');
+                        }
+                        catch (error) {
+                            console.error('Failed to start characteristic updates:', error);
+                        }
+                        return characteristic;
+                    })
+                    .then(characteristic => {
+                        console.log("addEventListener...");
+                        characteristic.addEventListener('characteristicvaluechanged',
+                            handleCharacteristicValueChanged);
+                        console.log('Notifications have been started.');
+                    })
+                    .catch(error => {
+                        console.error("Error123");
+                        console.error(error);
+                    });
+
+                function handleCharacteristicValueChanged(event) {
+                    const value = event.target.value;
+                    console.log('Received ' + value);
+                    // TODO: Parse Heart Rate Measurement value.
+                    // See https://github.com/WebBluetoothCG/demos/blob/gh-pages/heart-rate-sensor/heartRateSensor.js
+                }
+                return;
+
+                const device = await navigator.bluetooth.requestDevice({
+                    filters: [{ services: ['000018aa-0000-1000-8000-00805f9b34fb'] }],
+                    optionalServices: ['00002aaa-0000-1000-8000-00805f9b34fb'],
+                    acceptAllDevices: false
+                });
+
+                statusText.textContent = `Connecting to ${device.name}...`;
+
+                console.log(statusText.textContent);
+
+                const server = await device.gatt.connect();
+
+                // Access the service
+                const service = await server.getPrimaryService('000018aa-0000-1000-8000-00805f9b34fb');
+
+
+                // Access the characteristic
+                const characteristic = await service.getCharacteristic('00002aaa-0000-1000-8000-00805f9b34fb');
+
+
+
+                // Check if the characteristic supports indication
+                if (characteristic.properties.indicate) {
+                    await characteristic.startNotifications();
+                    console.log("startNotifications!");
+
+                    characteristic.addEventListener('characteristicvaluechanged', (event) => {
+                        const value = event.target.value;
+                        console.log('Notification received: ', value);
+                        // Handle incoming notification data
+                    });
+
+                    console.log('Started listening for indications.');
+                } else {
+                    console.log('Characteristic does not support indication.');
+                }
+
+                // Sending data to the device
+                await writeCharacteristic(characteristic, '01', 'navid123');
+                await delay(1000);
+
+                await writeCharacteristic(characteristic, '02', 'navid123');
+                await delay(1000);
+
+                await writeCharacteristic(characteristic, '03', 2, '0708');  // Length 2, custom value
+                await delay(1000);
+
+                await writeCharacteristic(characteristic, '04', 'ep-1ad032-413b338b13cc24f2-841168d810a83e3c');
+                await delay(1000);
+
+                await writeCharacteristic(characteristic, '05', 'vrail-han-devices-iot.azure-devices.net');
+                await delay(1000);
+
+                await writeCharacteristic(characteristic, '06', 'A8xMGlqlqg+XBemDB36cdkQXosPnOQY969dbElFhS+w=');
+                await delay(1000);
+
+                statusText.textContent = `Onboarding complete!`;
+            } catch (error) {
+                if (error.message.includes("Not paired")) {
+                    statusText.textContent = "Error: Device is not paired. Please pair the device in your Bluetooth settings.";
+                    console.error("Device is not paired. Please pair it and try again.", error);
+                } else {
+                    statusText.textContent = `Error: ${error.message}`;
+                    console.error(error);
+                }
+            }
+        });
+
+        // Function to convert string to hex and write it to the characteristic
+        async function writeCharacteristic(characteristic, type, value) {
+            const hexValue = stringToHexString(value);
+            const hexLength = value.length.toString(16).padStart(2, '0');
+            const fullValue = `${type}${hexLength}${hexValue}`.toLowerCase();
+
+            // Convert hex string to byte array
+            const data = hexStringToByteArray(fullValue);
+            await characteristic.writeValue(data);
+        }
+
+        // Delay helper function
+        function delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // Convert string to hex
+        function stringToHexString(value) {
+            return Array.from(value).map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join('');
+        }
+
+        // Convert hex string to byte array
+        function hexStringToByteArray(hex) {
+            const result = [];
+            for (let i = 0; i < hex.length; i += 2) {
+                result.push(parseInt(hex.substr(i, 2), 16));
+            }
+            return new Uint8Array(result);
+        }
+    </script>
+</body>
+
+</html>
