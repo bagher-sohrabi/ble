@@ -181,12 +181,9 @@ const device = await navigator.bluetooth.requestDevice({
                 console.log('Characteristic does not support indication.');
             }
 
-            alert("Onboarding1...");
 
             // Sending data to the device
             await writeCharacteristic(characteristic, '01', 'navid123');
-
-            alert("Onboarding2...");
 
             await writeCharacteristic(characteristic, '02', 'navid123');
 
@@ -323,6 +320,7 @@ fetch(url, {
             const hexLength = value.length.toString(16).padStart(2, '0');
             const fullValue = `${type}${hexLength}${hexValue}`.toLowerCase();
 
+            alert(fullValue);
             // Convert hex string to byte array
             const data = hexStringToByteArray(fullValue);
             await characteristic.writeValue(data);
