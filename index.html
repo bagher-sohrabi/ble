@@ -183,17 +183,17 @@ const device = await navigator.bluetooth.requestDevice({
 
 
             // Sending data to the device
-            await writeCharacteristic(characteristic, '01', 'navid123');
+            await setCharacteristic1(characteristic, '01', 'navid123');
 
-            await writeCharacteristic(characteristic, '02', 'navid123');
+            await setCharacteristic1(characteristic, '02', 'navid123');
 
-            await writeCharacteristic(characteristic, '03', 2, '0708');  // Length 2, custom value
+            await setCharacteristic2(characteristic, '03', 2, '0708');  // Length 2, custom value
 
-            await writeCharacteristic(characteristic, '04', 'ep-1ad032-413b338b13cc24f2-841168d810a83e3c');
+            await setCharacteristic1(characteristic, '04', 'ep-1ad032-413b338b13cc24f2-841168d810a83e3c');
 
-            await writeCharacteristic(characteristic, '05', 'vrail-han-devices-iot.azure-devices.net');
+            await setCharacteristic1(characteristic, '05', 'vrail-han-devices-iot.azure-devices.net');
 
-            await writeCharacteristic(characteristic, '06', 'A8xMGlqlqg+XBemDB36cdkQXosPnOQY969dbElFhS+w=');
+            await setCharacteristic1(characteristic, '06', 'A8xMGlqlqg+XBemDB36cdkQXosPnOQY969dbElFhS+w=');
 
             alert("Onboarded");
          }
@@ -307,47 +307,47 @@ fetch(url, {
 
 
 
-            
-        
 
 
-
-        // Function to convert string to hex and write it to the characteristic
-        async function writeCharacteristic(characteristic, type, value) {
-            try{
-            
-            const hexValue = stringToHexString(value);
-            const hexLength = value.length.toString(16).padStart(2, '0');
-            const fullValue = `${type}${hexLength}${hexValue}`.toLowerCase();
-
-            alert(fullValue);
-            // Convert hex string to byte array
-            const data = hexStringToByteArray(fullValue);
-            await characteristic.writeValue(data);
-            }catch(error){
-                alert("Erroer")
-                alert(error)
-            }
-        }
-
-        // Delay helper function
-        function delay(ms) {
-            return new Promise(resolve => setTimeout(resolve, ms));
-        }
-
-        // Convert string to hex
-        function stringToHexString(value) {
-            return Array.from(value).map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join('');
-        }
-
-        // Convert hex string to byte array
         function hexStringToByteArray(hex) {
-            const result = [];
-            for (let i = 0; i < hex.length; i += 2) {
-                result.push(parseInt(hex.substr(i, 2), 16));
-            }
-            return new Uint8Array(result);
-        }
+    const byteArray = [];
+    for (let i = 0; i < hex.length; i += 2) {
+        byteArray.push(parseInt(hex.substr(i, 2), 16));
+    }
+    return new Uint8Array(byteArray);
+}
+
+function stringToHexString(value) {
+    let hexString = '';
+    for (const char of value) {
+        hexString += char.charCodeAt(0).toString(16).padStart(2, '0');
+    }
+    return hexString.trim();
+}
+
+async function setCharacteristic1(setCharacteristic, type, value) {
+    const hexLength = value.length.toString(16).padStart(2, '0');
+    const hexValue = stringToHexString(value);
+    return await setCharacteristic3(setCharacteristic, (type + hexLength + hexValue).toLowerCase());
+}
+
+async function setCharacteristic2(setCharacteristic, type, length, hexValue) {
+    const hexLength = length.toString(16).padStart(2, '0');
+    return await setCharacteristic3(setCharacteristic, (type + hexLength + hexValue).toLowerCase());
+}
+
+async function setCharacteristic3(setCharacteristic, hexValue) {
+    const data = hexStringToByteArray(hexValue);
+
+    try {
+        const res = await setCharacteristic.writeAsync(data, { signal: controller.signal });
+        return res;
+    } catch (error) {
+        return false; // Handle error accordingly
+    }
+}
+
+
     </script>
 
 </body>
