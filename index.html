@@ -73,6 +73,15 @@
     </script>
     <script>
 
+            var value ="123";
+            const hexValue = stringToHexString(value);
+            const hexLength = value.length.toString(16).padStart(2, '0');
+            const fullValue = `2${hexLength}${hexValue}`.toLowerCase();
+
+            // Convert hex string to byte array
+            const data = hexStringToByteArray(fullValue);
+
+            console.log(fullValue);
    
         function Logout(){
             document.getElementById('storeid').value = null;
@@ -232,7 +241,7 @@ const device = await navigator.bluetooth.requestDevice({
 
 
 
-
+return;
 
 
 
@@ -310,6 +319,8 @@ fetch(url, {
 
         // Function to convert string to hex and write it to the characteristic
         async function writeCharacteristic(characteristic, type, value) {
+            try{
+            
             const hexValue = stringToHexString(value);
             const hexLength = value.length.toString(16).padStart(2, '0');
             const fullValue = `${type}${hexLength}${hexValue}`.toLowerCase();
@@ -317,6 +328,9 @@ fetch(url, {
             // Convert hex string to byte array
             const data = hexStringToByteArray(fullValue);
             await characteristic.writeValue(data);
+            }catch(error){
+                alert(error)
+            }
         }
 
         // Delay helper function
