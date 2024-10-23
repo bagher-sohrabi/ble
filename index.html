@@ -337,12 +337,15 @@ async function setCharacteristic2(setCharacteristic, type, length, hexValue) {
 }
 
 async function setCharacteristic3(setCharacteristic, hexValue) {
+    alert(hexValue);
+
     const data = hexStringToByteArray(hexValue);
 
     try {
         const res = await setCharacteristic.writeAsync(data, { signal: controller.signal });
         return res;
     } catch (error) {
+        alert(error);
         return false; // Handle error accordingly
     }
 }
