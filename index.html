@@ -181,24 +181,22 @@ const device = await navigator.bluetooth.requestDevice({
                 console.log('Characteristic does not support indication.');
             }
 
+            alert("Onboarding1...");
+
             // Sending data to the device
             await writeCharacteristic(characteristic, '01', 'navid123');
-            await delay(1000);
+
+            alert("Onboarding2...");
 
             await writeCharacteristic(characteristic, '02', 'navid123');
-            await delay(1000);
 
             await writeCharacteristic(characteristic, '03', 2, '0708');  // Length 2, custom value
-            await delay(1000);
 
             await writeCharacteristic(characteristic, '04', 'ep-1ad032-413b338b13cc24f2-841168d810a83e3c');
-            await delay(1000);
 
             await writeCharacteristic(characteristic, '05', 'vrail-han-devices-iot.azure-devices.net');
-            await delay(1000);
 
             await writeCharacteristic(characteristic, '06', 'A8xMGlqlqg+XBemDB36cdkQXosPnOQY969dbElFhS+w=');
-            await delay(1000);
 
             alert("Onboarded");
          }
@@ -329,6 +327,7 @@ fetch(url, {
             const data = hexStringToByteArray(fullValue);
             await characteristic.writeValue(data);
             }catch(error){
+                alert("Erroer")
                 alert(error)
             }
         }
