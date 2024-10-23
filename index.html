@@ -129,6 +129,115 @@ const baseUrl = document.getElementById('baseurl').value;
 const storeid = document.getElementById('storeid').value;
 const apikey = document.getElementById('apikey').value;
 
+// const deviceid = document.getElementById('deviceid').value;
+// const devicekey = document.getElementById('devicekey').value;
+// const iothub = document.getElementById('iothub').value;
+
+
+
+
+
+
+
+                try{
+const device = await navigator.bluetooth.requestDevice({
+                filters: [{ services: ['000018aa-0000-1000-8000-00805f9b34fb'] }],
+                optionalServices: ['00002aaa-0000-1000-8000-00805f9b34fb'],
+                acceptAllDevices: false
+                    });
+
+
+            const server = await device.gatt.connect();
+
+            // Access the service
+            const service = await server.getPrimaryService('000018aa-0000-1000-8000-00805f9b34fb');
+
+
+            // Access the characteristic
+            const characteristic = await service.getCharacteristic('00002aaa-0000-1000-8000-00805f9b34fb');
+
+            // Check if the characteristic supports indication
+            if (characteristic.properties.indicate) {
+                await characteristic.startNotifications();
+                console.log("startNotifications!");
+
+                characteristic.addEventListener('characteristicvaluechanged', (event) => {
+                    const value = event.target.value;
+                    console.log('Notification received: ', value);
+                    // Handle incoming notification data
+                });
+
+                console.log('Started listening for indications.');
+            } else {
+                console.log('Characteristic does not support indication.');
+            }
+
+            // Sending data to the device
+            await writeCharacteristic(characteristic, '01', 'navid123');
+            await delay(1000);
+
+            await writeCharacteristic(characteristic, '02', 'navid123');
+            await delay(1000);
+
+            await writeCharacteristic(characteristic, '03', 2, '0708');  // Length 2, custom value
+            await delay(1000);
+
+            await writeCharacteristic(characteristic, '04', 'ep-1ad032-413b338b13cc24f2-841168d810a83e3c');
+            await delay(1000);
+
+            await writeCharacteristic(characteristic, '05', 'vrail-han-devices-iot.azure-devices.net');
+            await delay(1000);
+
+            await writeCharacteristic(characteristic, '06', 'A8xMGlqlqg+XBemDB36cdkQXosPnOQY969dbElFhS+w=');
+            await delay(1000);
+
+            alert("Onboarded");
+         }
+            catch (error) {
+                alert(error);
+            
+            }finally{
+                document.getElementById("myForm").style.display = "block";
+            }
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 const url = 'https://bagher-api.vusionrail.com/v1/stores/poster32/devices/ads-epd-ce4678/register';
 const headers = {
     'Content-Type': 'application/json',
@@ -146,6 +255,31 @@ const data = {
         battery: 0,
     },
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 fetch(url, {
     method: 'POST',
@@ -165,10 +299,12 @@ fetch(url, {
     console.error('Error:', error);
 });
 
+        }
+
 
 
             
-        }
+        
 
 
 
