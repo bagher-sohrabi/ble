@@ -1,139 +1,176 @@
-
 <!DOCTYPE html>
-<html lang="en">
+<html>
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BLE Device Onboarding</title>
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body,h1, h2, h3, h4, h5, h6 {
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+       
+        /* The popup form - hidden by default */
+        .form-popup {
+            position: fixed;
+            bottom: 0;
+            right: 15px;
+            border: 3px solid #f1f1f1;
+            z-index: 9;
+        }
+
+        /* Add styles to the form container */
+        .form-container {
+            width: 300px;
+            padding: 10px;
+            background-color: white;
+        }
+
+      
+
+    </style>
 </head>
 
 <body>
-    <h1>BLE Device Onboarding</h1>
-    <button id="onboardDeviceButton">Onboard Device</button>
-    <p id="status">Status: Not connected</p>
+
+
+    <div class="form-popup">
+
+        <form class="form-container" id="myForm">
+            <h2>Onbaoding</h2>
+            <br />
+
+            <label for="email"><b>Host</b></label>
+            <div>
+                <select class="w3-select  w3-border w3-light-grey" id="baseurl">
+                    <option value="1" disabled>Select Host</option>
+                    <option value="https://bagher-api.vusionrail.com">bagher</option>
+                    <option value="2">Option 2</option>
+                    <option value="3">Option 3</option>
+                  </select>
+            </div>
+            <br/>
+            <label for="email"><b>StoreId</b></label>
+            <input type="text" class="w3-input w3-border w3-light-grey" placeholder="Enter StoreId" id="storeid" required>
+            <br/>
+            <label for="psw"><b>API Key</b></label>
+            <input type="password" class="w3-input w3-border w3-light-grey"placeholder="Enter API Key" id="apikey" required>
+<br/>
+            <button class="w3-btn w3-green w3-block" type="submit" class="btn">Onboard</button>
+            <br/>
+
+            <button class="w3-btn w3-red w3-block" id="logout" onclick="Logout()">Logout</button>
+        </form>
+    </div>
 
     <script>
-        const onboardDeviceButton = document.getElementById('onboardDeviceButton');
-        const statusText = document.getElementById('status');
 
+    </script>
+    <script>
 
-        onboardDeviceButton.addEventListener('click', async () => {
-            try {
+   
+        function Logout(){
+            document.getElementById('storeid').value = null;
+            document.getElementById('apikey').value = null;
+            document.getElementById('baseurl').value = null;
+            document.getElementById("logout").style.display = "none";
+            localStorage.clear();
+        }
+        
+        const storeid = localStorage.getItem('storeid');
+        const apikey = localStorage.getItem('apikey');
+        const baseurl = localStorage.getItem('baseurl');
+       
+        document.getElementById('storeid').value = storeid;
+        document.getElementById('apikey').value = apikey;
+        document.getElementById('baseurl').value = baseurl;
 
+        if(apikey!= null && apikey.length >1){
+            document.getElementById("logout").style.display = "block";
+        }else{
+            document.getElementById("logout").style.display = "none";
+        }
+        document.getElementById('myForm').addEventListener('submit', async function (event) {
+            event.preventDefault(); // Prevent the default form submission
 
+            const baseurl = document.getElementById('baseurl').value;
+            const storeid = document.getElementById('storeid').value;
+            const apikey = document.getElementById('apikey').value;
 
-                navigator.bluetooth.requestDevice({ filters: [{ services: ['000018aa-0000-1000-8000-00805f9b34fb'] }] })
-                    .then(device => {
-                        console.log("connecting...");
-                        return device.gatt.connect();
-                    }
-                    )
-                    .then(server => {
-                        console.log("getPrimaryService...");
-                        return server.getPrimaryService('000018aa-0000-1000-8000-00805f9b34fb')
-                    })
-                    .then(service => {
-                        console.log("getCharacteristic...");
-                        return service.getCharacteristic('00002aaa-0000-1000-8000-00805f9b34fb')
-                    })
-                    .then(async characteristic => {
-                        try {
-                            await characteristic.startNotifications();
-                            console.log('Characteristic updates started successfully');
-                        }
-                        catch (error) {
-                            console.error('Failed to start characteristic updates:', error);
-                        }
-                        return characteristic;
-                    })
-                    .then(characteristic => {
-                        console.log("addEventListener...");
-                        characteristic.addEventListener('characteristicvaluechanged',
-                            handleCharacteristicValueChanged);
-                        console.log('Notifications have been started.');
-                    })
-                    .catch(error => {
-                        statusText.textContent = error;
-                        console.error("Error123");
-                        console.error(error);
-                    });
-
-                function handleCharacteristicValueChanged(event) {
-                    const value = event.target.value;
-                    console.log('Received ' + value);
-                    // TODO: Parse Heart Rate Measurement value.
-                    // See https://github.com/WebBluetoothCG/demos/blob/gh-pages/heart-rate-sensor/heartRateSensor.js
-                }
-                return;
-
-                const device = await navigator.bluetooth.requestDevice({
-                    filters: [{ services: ['000018aa-0000-1000-8000-00805f9b34fb'] }],
-                    optionalServices: ['00002aaa-0000-1000-8000-00805f9b34fb'],
-                    acceptAllDevices: false
-                });
-
-                statusText.textContent = `Connecting to ${device.name}...`;
-
-                console.log(statusText.textContent);
-
-                const server = await device.gatt.connect();
-
-                // Access the service
-                const service = await server.getPrimaryService('000018aa-0000-1000-8000-00805f9b34fb');
-
-
-                // Access the characteristic
-                const characteristic = await service.getCharacteristic('00002aaa-0000-1000-8000-00805f9b34fb');
-
-
-
-                // Check if the characteristic supports indication
-                if (characteristic.properties.indicate) {
-                    await characteristic.startNotifications();
-                    console.log("startNotifications!");
-
-                    characteristic.addEventListener('characteristicvaluechanged', (event) => {
-                        const value = event.target.value;
-                        console.log('Notification received: ', value);
-                        // Handle incoming notification data
-                    });
-
-                    console.log('Started listening for indications.');
-                } else {
-                    console.log('Characteristic does not support indication.');
-                }
-
-                // Sending data to the device
-                await writeCharacteristic(characteristic, '01', 'navid123');
-                await delay(1000);
-
-                await writeCharacteristic(characteristic, '02', 'navid123');
-                await delay(1000);
-
-                await writeCharacteristic(characteristic, '03', 2, '0708');  // Length 2, custom value
-                await delay(1000);
-
-                await writeCharacteristic(characteristic, '04', 'ep-1ad032-413b338b13cc24f2-841168d810a83e3c');
-                await delay(1000);
-
-                await writeCharacteristic(characteristic, '05', 'vrail-han-devices-iot.azure-devices.net');
-                await delay(1000);
-
-                await writeCharacteristic(characteristic, '06', 'A8xMGlqlqg+XBemDB36cdkQXosPnOQY969dbElFhS+w=');
-                await delay(1000);
-
-                statusText.textContent = `Onboarding complete!`;
-            } catch (error) {
-                if (error.message.includes("Not paired")) {
-                    statusText.textContent = "Error: Device is not paired. Please pair the device in your Bluetooth settings.";
-                    console.error("Device is not paired. Please pair it and try again.", error);
-                } else {
-                    statusText.textContent = `Error: ${error.message}`;
-                    console.error(error);
-                }
-            }
+            console.log(baseurl);
+            localStorage.setItem('baseurl', baseurl);
+            localStorage.setItem('storeid', storeid);
+            localStorage.setItem('apikey', apikey);
+          
+            document.getElementById("logout").style.display = "block";
+            await Register();
+            // Here you can send data to a server or perform other actions
         });
+
+
+        async function Register() {
+
+   
+                document.getElementById("myForm").style.display = "none";
+
+
+
+
+
+
+
+
+const baseUrl = document.getElementById('baseurl').value;
+const storeid = document.getElementById('storeid').value;
+const apikey = document.getElementById('apikey').value;
+
+const url = 'https://bagher-api.vusionrail.com/v1/stores/poster32/devices/ads-epd-ce4678/register';
+const headers = {
+    'Content-Type': 'application/json',
+    'Ocp-Apim-Subscription-Key': apikey,
+};
+
+console.log(headers);
+
+const data = {
+    pin: '0000',
+    sync: {
+        initialOffset: 0,
+        interval: 0,
+        intervalLimit: 0,
+        battery: 0,
+    },
+};
+
+fetch(url, {
+    method: 'POST',
+    headers: headers,
+    body: JSON.stringify(data),
+})
+.then(response => {
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+})
+.then(data => {
+    console.log('Success:', data);
+})
+.catch(error => {
+    console.error('Error:', error);
+});
+
+
+
+            
+        }
+
+
 
         // Function to convert string to hex and write it to the characteristic
         async function writeCharacteristic(characteristic, type, value) {
@@ -165,6 +202,7 @@
             return new Uint8Array(result);
         }
     </script>
+
 </body>
 
 </html>
